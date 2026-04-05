@@ -13,10 +13,9 @@
 
 DeerFlow reads `config.yaml` at runtime to discover available models. We will add a Doubao model entry using the existing Volcengine example shape, including required fields and capability flags. This keeps configuration aligned with documented examples and avoids storing secrets in the repo.
 
-Example entry (to be added under `models`):
+Example entry (add this item under the existing `models:` list):
 
 ```yaml
-models:
   - name: doubao-seed-1.8
     display_name: Doubao-Seed-1.8
     use: deerflow.models.patched_deepseek:PatchedChatDeepSeek
@@ -27,7 +26,6 @@ models:
     max_retries: 2
     supports_thinking: true
     supports_vision: true
-    supports_reasoning_effort: true
     when_thinking_enabled:
       extra_body:
         thinking:
