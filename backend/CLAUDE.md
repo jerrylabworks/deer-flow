@@ -212,6 +212,7 @@ FastAPI application on port 8001 with health check at `GET /health`.
 | **Suggestions** (`/api/threads/{id}/suggestions`) | `POST /` - generate follow-up questions; rich list/block model content is normalized before JSON parsing |
 
 Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → Gateway.
+Docker's development nginx config also carries explicit `/api/assistants` and `/api/runs` routes so assistant metadata and blocking run requests reach the Gateway instead of falling through to the frontend.
 
 ### Sandbox System (`packages/harness/deerflow/sandbox/`)
 

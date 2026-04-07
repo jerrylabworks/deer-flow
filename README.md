@@ -186,9 +186,11 @@ That prompt is intended for coding agents. It tells the agent to clone the repo 
    ```bash
    TAVILY_API_KEY=your-tavily-api-key
    OPENAI_API_KEY=your-openai-api-key
-   # OpenRouter also uses OPENAI_API_KEY when your config uses langchain_openai:ChatOpenAI + base_url.
-   # Add other provider keys as needed
-   INFOQUEST_API_KEY=your-infoquest-api-key
+   MOONSHOT_API_KEY=your-moonshot-api-key
+    # OpenRouter also uses OPENAI_API_KEY when your config uses langchain_openai:ChatOpenAI + base_url.
+    # Kimi K2.5 uses MOONSHOT_API_KEY when your config uses the Moonshot example from config.example.yaml.
+    # Add other provider keys as needed
+    INFOQUEST_API_KEY=your-infoquest-api-key
    ```
 
 - Option B: Export environment variables in your shell
