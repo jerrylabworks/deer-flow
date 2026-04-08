@@ -144,7 +144,9 @@ export function useThreadStream({
 }: ThreadStreamOptions) {
   const { t } = useI18n();
   // Track the thread ID that is currently streaming to handle thread changes during streaming
-  const [onStreamThreadId, setOnStreamThreadId] = useState(() => threadId);
+  const [onStreamThreadId, setOnStreamThreadId] = useState(
+    () => threadId ?? undefined,
+  );
   // Ref to track current thread ID across async callbacks without causing re-renders,
   // and to allow access to the current thread id in onUpdateEvent
   const threadIdRef = useRef<string | null>(threadId ?? null);
@@ -162,7 +164,7 @@ export function useThreadStream({
   }, [onStart, onFinish, onToolEnd]);
 
   useEffect(() => {
-    const normalizedThreadId = threadId ?? null;
+    const normalizedThreadId = threadId ?? undefined;
     if (!normalizedThreadId) {
       // Reset when the UI moves back to a brand new unsaved thread.
       startedRef.current = false;
@@ -170,7 +172,7 @@ export function useThreadStream({
     } else {
       setOnStreamThreadId(normalizedThreadId);
     }
-    threadIdRef.current = normalizedThreadId;
+    threadIdRef.current = normalizedThreadId ?? null;
   }, [threadId]);
 
   const _handleOnStart = useCallback((id: string) => {
