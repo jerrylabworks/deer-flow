@@ -109,6 +109,45 @@ After deployment, the main server-side files live under `/opt/deer-flow`:
 - `/opt/deer-flow/docker/docker-compose.registry.yaml`
 - `/opt/deer-flow/backend/.deer-flow`
 
+## Current ECS Effective Configuration
+
+The current live ECS deployment at `101.201.37.112` is using the following effective settings:
+
+- Registry endpoint on the server itself: `127.0.0.1:5000`
+- Active image tag: `myagent`
+- Public application URL: `http://101.201.37.112:2026`
+- Runtime config path: `/opt/deer-flow/config.yaml`
+- Runtime env file: `/opt/deer-flow/.env`
+
+Verified runtime capabilities on the current ECS deployment:
+
+- `doubao-seed-1.8` model available
+- `doubao-seed-2.0-pro` model available
+- `kimi-k2.5` model available
+- Homepage redirects directly to `/workspace`
+- `AioSandboxProvider` enabled and working
+- `bash` execution through sandbox verified
+- Video-generation skill verified end-to-end with `python3`
+
+Relevant live runtime choices currently in effect:
+
+- `sandbox.use: deerflow.community.aio_sandbox:AioSandboxProvider`
+- Sandbox image: `enterprise-public-cn-beijing.cr.volces.com/vefaas-public/all-in-one-sandbox:latest`
+- ECS worker tuning currently set for a `4C / 8G` machine:
+  - `GATEWAY_WORKERS=2`
+  - `LANGGRAPH_JOBS_PER_WORKER=2`
+- Long-running API routes in nginx are configured with extended `1800s` timeouts for:
+  - `/api/runs`
+  - `/api/threads`
+  - `/api/assistants`
+
+Required secrets currently expected in `/opt/deer-flow/.env`:
+
+- `VOLCENGINE_API_KEY`
+- `MOONSHOT_API_KEY`
+- `GEMINI_API_KEY`
+- `BETTER_AUTH_SECRET`
+
 ## Check Deployment Status on ECS
 
 SSH into the server and run:
@@ -141,6 +180,17 @@ docker compose -p deer-flow -f docker/docker-compose.registry.yaml restart
 ## Pull Updated Images and Redeploy
 
 Re-run the local deployment script with the same or a new tag. The script will pull fresh images and restart the stack.
+
+For the current production-like ECS host, the standard update command is:
+
+```bash
+bash scripts/deploy-ecs.sh \
+  --host 101.201.37.112 \
+  --user root \
+  --password '<ecs-ssh-password>' \
+  --registry-host 127.0.0.1:5000 \
+  --tag myagent
+```
 
 ## Troubleshooting
 
@@ -182,6 +232,25 @@ Edit these files on the server and redeploy or restart:
 
 - `/opt/deer-flow/.env`
 - `/opt/deer-flow/config.yaml`
+
+### Video generation says it cannot execute Python
+
+For the current ECS deployment, that explanation is outdated if the stack is running with the live configuration above.
+
+Expected working prerequisites are:
+
+- `AioSandboxProvider` enabled in `/opt/deer-flow/config.yaml`
+- `GEMINI_API_KEY` present in `/opt/deer-flow/.env`
+- video skill command uses `python3`
+- long-running `/api/runs` requests pass through nginx with extended timeouts
+
+If video generation regresses, verify:
+
+```bash
+curl -s http://127.0.0.1:2026/api/models
+docker logs deer-flow-gateway --tail=200
+docker ps -a | grep deer-flow-sandbox
+```
 
 ## Notes
 
