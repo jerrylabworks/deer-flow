@@ -13,5 +13,6 @@ void test("new thread stream keeps threadId undefined until server creates it", 
     source,
     /const \[onStreamThreadId, setOnStreamThreadId\] = useState\([\s\S]*threadId \?\? undefined[\s\S]*\)/,
   );
-  assert.match(source, /threadId:\s+onStreamThreadId/);
+  assert.match(source, /threadId:\s+effectiveThreadId/);
+  assert.match(source, /thread_id:\s+effectiveThreadId/);
 });

@@ -455,6 +455,8 @@ export function useThreadStream({
           }),
         );
 
+        const effectiveThreadId = threadIdRef.current ?? undefined;
+
         await thread.submit(
           {
             messages: [
@@ -476,7 +478,7 @@ export function useThreadStream({
             ],
           },
           {
-            threadId: threadId,
+            threadId: effectiveThreadId,
             streamSubgraphs: true,
             streamResumable: true,
             config: {
@@ -497,7 +499,7 @@ export function useThreadStream({
                     : context.mode === "thinking"
                       ? "low"
                       : undefined),
-              thread_id: threadId,
+              thread_id: effectiveThreadId,
             },
           },
         );
