@@ -19,6 +19,7 @@ Options:
   --registry-host HOST:PORT    Registry host (default: 127.0.0.1:5000)
   --registry-user USER         Registry username (default: admin)
   --registry-password PASS     Registry password (default: value from docs/docker-registry-info.md)
+  --sync-env                   Upload local .env and frontend/.env to ECS (default: off)
 EOF
 }
 
@@ -33,6 +34,7 @@ DEPLOY_DIR=/opt/deer-flow
 REGISTRY_HOST=127.0.0.1:5000
 REGISTRY_USER=admin
 REGISTRY_PASSWORD=d92RzHUfYgy7Yi9Pop0WUg
+SYNC_ENV=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -79,6 +81,10 @@ while [[ $# -gt 0 ]]; do
     --registry-password)
       REGISTRY_PASSWORD="$2"
       shift 2
+      ;;
+    --sync-env)
+      SYNC_ENV=1
+      shift 1
       ;;
     -h|--help)
       usage
@@ -146,8 +152,14 @@ upload_file "$REPO_ROOT/docker/docker-compose.registry.yaml" "$DEPLOY_DIR/docker
 upload_file "$REPO_ROOT/docker/nginx/nginx.conf" "$DEPLOY_DIR/docker/nginx/nginx.conf"
 upload_file "$REPO_ROOT/config.yaml" "$DEPLOY_DIR/config.yaml"
 upload_file "$REPO_ROOT/extensions_config.json" "$DEPLOY_DIR/extensions_config.json"
-upload_file "$REPO_ROOT/.env" "$DEPLOY_DIR/.env"
-upload_file "$REPO_ROOT/frontend/.env" "$DEPLOY_DIR/frontend/.env"
+
+if [[ "$SYNC_ENV" == "1" ]]; then
+  log "Uploading local env files to ECS"
+  upload_file "$REPO_ROOT/.env" "$DEPLOY_DIR/.env"
+  upload_file "$REPO_ROOT/frontend/.env" "$DEPLOY_DIR/frontend/.env"
+else
+  log "Preserving remote env files on ECS (use --sync-env to overwrite)"
+fi
 
 log "Syncing support directories"
 run_remote "rm -rf '$DEPLOY_DIR/skills' '$DEPLOY_DIR/backend/.langgraph_api' && mkdir -p '$DEPLOY_DIR/skills' '$DEPLOY_DIR/backend/.langgraph_api'"

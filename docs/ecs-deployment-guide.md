@@ -7,6 +7,7 @@ This guide explains how to deploy DeerFlow to an Alibaba Cloud ECS instance runn
 The deployment flow uses these files:
 
 - `scripts/deploy-ecs.sh` — run locally from your workstation
+- `scripts/release-ecs.sh` — build, push, and deploy in one command
 - `scripts/remote-deploy.sh` — uploaded and run on the ECS host
 - `docker/docker-compose.registry.yaml` — production stack using registry images
 
@@ -25,13 +26,20 @@ Install these tools on your local machine before running the deploy script:
 - `ssh`
 - `scp`
 - `sshpass`
+- a healthy local Docker daemon (`docker version` must succeed)
 
 The local repository must also contain the runtime files you want to upload:
 
 - `config.yaml`
-- `.env`
-- `frontend/.env`
 - `extensions_config.json`
+
+By default, `scripts/deploy-ecs.sh` preserves the existing remote `.env` files on ECS and does not overwrite them. This protects server-only secrets such as `GEMINI_API_KEY`, `MOONSHOT_API_KEY`, and `BETTER_AUTH_SECRET`.
+
+If you explicitly want to overwrite remote env files with your local copies, use:
+
+```bash
+bash scripts/deploy-ecs.sh ... --sync-env
+```
 
 ## ECS Network Requirements
 
@@ -86,6 +94,45 @@ To deploy a different registry tag:
   --password '<ecs-ssh-password>' \
   --tag 0bdaf8db
 ```
+
+## Build, Push, and Deploy in One Command
+
+Use `scripts/release-ecs.sh` when you want to build the latest backend and frontend images locally, push them to the private registry, and then deploy that tag to ECS in one step.
+
+```bash
+bash scripts/release-ecs.sh \
+  --host 101.201.37.112 \
+  --user root \
+  --password '<ecs-ssh-password>' \
+  --tag myagent
+```
+
+This workflow will:
+
+1. Build backend and frontend images locally
+2. Push both images to `101.201.37.112:5000`
+3. Call `scripts/deploy-ecs.sh` using `127.0.0.1:5000` on ECS
+4. Verify the public app endpoint and `/api/models`
+
+The host split is important:
+
+- local push host: `101.201.37.112:5000`
+- ECS pull host: `127.0.0.1:5000`
+
+This is why `release-ecs.sh` uses two registry host settings internally:
+
+- `--push-registry-host`
+- `--deploy-registry-host`
+
+If the script exits immediately with a Docker daemon error, verify your local Docker environment first:
+
+```bash
+docker context show
+docker version
+docker info
+```
+
+The release workflow requires a healthy local Docker daemon because image builds happen on your workstation before deployment.
 
 ## Use Gateway Mode
 
@@ -161,8 +208,8 @@ export DEER_FLOW_CONFIG_PATH=/opt/deer-flow/config.yaml
 export DEER_FLOW_EXTENSIONS_CONFIG_PATH=/opt/deer-flow/extensions_config.json
 export DEER_FLOW_DOCKER_SOCKET=/var/run/docker.sock
 export DEER_FLOW_REPO_ROOT=/opt/deer-flow
-export DEER_FLOW_BACKEND_IMAGE=101.201.37.112:5000/deerflow-backend:myagent
-export DEER_FLOW_FRONTEND_IMAGE=101.201.37.112:5000/deerflow-frontend:myagent
+export DEER_FLOW_BACKEND_IMAGE=127.0.0.1:5000/deerflow-backend:myagent
+export DEER_FLOW_FRONTEND_IMAGE=127.0.0.1:5000/deerflow-frontend:myagent
 export BETTER_AUTH_SECRET=$(cat /opt/deer-flow/backend/.deer-flow/.better-auth-secret)
 
 docker compose -p deer-flow -f docker/docker-compose.registry.yaml ps
@@ -189,6 +236,18 @@ bash scripts/deploy-ecs.sh \
   --user root \
   --password '<ecs-ssh-password>' \
   --registry-host 127.0.0.1:5000 \
+  --tag myagent
+```
+
+For one-command local build, registry push, and ECS deploy, use:
+
+```bash
+bash scripts/release-ecs.sh \
+  --host 101.201.37.112 \
+  --user root \
+  --password '<ecs-ssh-password>' \
+  --push-registry-host 101.201.37.112:5000 \
+  --deploy-registry-host 127.0.0.1:5000 \
   --tag myagent
 ```
 

@@ -155,6 +155,14 @@ ensure_runtime_files() {
   [[ -f "$DEPLOY_DIR/docker/nginx/nginx.conf" ]] || fail "Missing nginx config"
 }
 
+cleanup_existing_containers() {
+  local containers=(deer-flow-frontend deer-flow-gateway deer-flow-langgraph deer-flow-nginx)
+  log "Removing conflicting existing containers if present"
+  for container in "${containers[@]}"; do
+    docker rm -f "$container" >/dev/null 2>&1 || true
+  done
+}
+
 ensure_auth_secret() {
   local secret_file="$DEPLOY_DIR/backend/.deer-flow/.better-auth-secret"
   if [[ ! -f "$secret_file" ]]; then
@@ -264,6 +272,7 @@ main() {
   ensure_runtime_layout
   ensure_runtime_files
   ensure_auth_secret
+  cleanup_existing_containers
   deploy_stack
   health_check
 }
