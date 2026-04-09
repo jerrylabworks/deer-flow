@@ -129,17 +129,64 @@ ensure_docker_available() {
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUSH_BACKEND_IMAGE="${PUSH_REGISTRY_HOST}/deerflow-backend:${IMAGE_TAG}"
 PUSH_FRONTEND_IMAGE="${PUSH_REGISTRY_HOST}/deerflow-frontend:${IMAGE_TAG}"
+FRONTEND_VERSION="$(python3 - <<'PY'
+import json
+from pathlib import Path
+print(json.loads(Path('frontend/package.json').read_text())['version'])
+PY
+)"
+BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+BUILD_BRANCH="$(git branch --show-current 2>/dev/null || printf 'unknown')"
+BUILD_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
+BUILD_COMMIT_MESSAGE="$(git log -1 --format=%s 2>/dev/null || printf 'unknown')"
+BACKEND_BUILD_INFO_FILE="$REPO_ROOT/backend/build_info.json"
 
 log() {
   printf '[release-ecs] %s\n' "$*"
 }
 
+write_build_metadata_file() {
+  python3 - <<PY
+import json
+from pathlib import Path
+path = Path(r"$BACKEND_BUILD_INFO_FILE")
+path.write_text(json.dumps({
+    "version": "$FRONTEND_VERSION",
+    "build_time": "$BUILD_TIME",
+    "branch": "$BUILD_BRANCH",
+    "commit": "$BUILD_COMMIT",
+    "commit_message": "$BUILD_COMMIT_MESSAGE",
+}, ensure_ascii=True, indent=2) + "\n")
+print(path)
+PY
+}
+
+cleanup_build_metadata_file() {
+  rm -f "$BACKEND_BUILD_INFO_FILE"
+}
+
 build_images() {
+  trap cleanup_build_metadata_file RETURN
+  write_build_metadata_file >/dev/null
   log "Building backend image ${PUSH_BACKEND_IMAGE}"
-  docker build --platform linux/amd64 -t "deerflow-backend:${IMAGE_TAG}" -f "$REPO_ROOT/backend/Dockerfile" "$REPO_ROOT"
+  docker build \
+    --platform linux/amd64 \
+    -t "deerflow-backend:${IMAGE_TAG}" \
+    -f "$REPO_ROOT/backend/Dockerfile" \
+    "$REPO_ROOT"
 
   log "Building frontend image ${PUSH_FRONTEND_IMAGE}"
-  docker build --platform linux/amd64 -t "deerflow-frontend:${IMAGE_TAG}" -f "$REPO_ROOT/frontend/Dockerfile" --target prod "$REPO_ROOT"
+  docker build \
+    --platform linux/amd64 \
+    --build-arg NEXT_PUBLIC_FRONTEND_VERSION="$FRONTEND_VERSION" \
+    --build-arg NEXT_PUBLIC_FRONTEND_BUILD_TIME="$BUILD_TIME" \
+    --build-arg NEXT_PUBLIC_FRONTEND_BUILD_BRANCH="$BUILD_BRANCH" \
+    --build-arg NEXT_PUBLIC_FRONTEND_BUILD_COMMIT="$BUILD_COMMIT" \
+    --build-arg NEXT_PUBLIC_FRONTEND_BUILD_COMMIT_MESSAGE="$BUILD_COMMIT_MESSAGE" \
+    -t "deerflow-frontend:${IMAGE_TAG}" \
+    -f "$REPO_ROOT/frontend/Dockerfile" \
+    --target prod \
+    "$REPO_ROOT"
 }
 
 tag_images() {

@@ -20,6 +20,7 @@ from app.gateway.routers import (
     thread_runs,
     threads,
     uploads,
+    version,
 )
 from deerflow.config.app_config import get_app_config
 
@@ -160,6 +161,10 @@ This gateway provides custom endpoints for models, MCP configuration, skills, an
                 "name": "health",
                 "description": "Health check and system status endpoints",
             },
+            {
+                "name": "version",
+                "description": "Frontend and backend build metadata for the running deployment",
+            },
         ],
     )
 
@@ -171,6 +176,9 @@ This gateway provides custom endpoints for models, MCP configuration, skills, an
 
     # MCP API is mounted at /api/mcp
     app.include_router(mcp.router)
+
+    # Version API is mounted at /api/version
+    app.include_router(version.router)
 
     # Memory API is mounted at /api/memory
     app.include_router(memory.router)

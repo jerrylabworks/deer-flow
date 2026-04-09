@@ -216,9 +216,11 @@ FastAPI application on port 8001 with health check at `GET /health`.
 | **Threads** (`/api/threads/{id}`) | `DELETE /` - remove DeerFlow-managed local thread data after LangGraph thread deletion; unexpected failures are logged server-side and return a generic 500 detail |
 | **Artifacts** (`/api/threads/{id}/artifacts`) | `GET /{path}` - serve artifacts; active content types (`text/html`, `application/xhtml+xml`, `image/svg+xml`) are always forced as download attachments to reduce XSS risk; `?download=true` still forces download for other file types |
 | **Suggestions** (`/api/threads/{id}/suggestions`) | `POST /` - generate follow-up questions; rich list/block model content is normalized before JSON parsing |
+| **Version** (`/api/version`) | `GET /` - return frontend env metadata plus backend release metadata loaded from `backend/build_info.json` or `DEERFLOW_BACKEND_BUILD_INFO_PATH` |
 
 Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → Gateway.
 Docker's development nginx config also carries explicit `/api/assistants` and `/api/runs` routes so assistant metadata and blocking run requests reach the Gateway instead of falling through to the frontend.
+The nginx config also forwards `/api/version` to the Gateway so the frontend About page can display release metadata from the running deployment.
 
 ### Sandbox System (`packages/harness/deerflow/sandbox/`)
 
