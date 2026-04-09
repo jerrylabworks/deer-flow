@@ -60,7 +60,7 @@ export function AboutSettingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    void fetch(new URL("/api/version", getBackendBaseURL()).toString())
+    void fetch(`${getBackendBaseURL()}/api/version`)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`Failed to load version info: ${response.status}`);
