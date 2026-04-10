@@ -706,6 +706,8 @@ All dict-returning methods are validated against Gateway Pydantic response model
 - [Architecture Overview](backend/CLAUDE.md) - Technical architecture details
 - [Backend Architecture](backend/README.md) - Backend architecture and API reference
 
+The workspace Settings -> About page now shows frontend and backend build metadata for the running deployment. Docker releases inject frontend metadata at build time, and the backend exposes release metadata through `/api/version`.
+
 ## ⚠️ Security Notice
 
 ### Improper Deployment May Introduce Security Risks

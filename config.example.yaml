@@ -51,6 +51,21 @@ models:
   #       thinking:
   #         type: enabled
 
+  # - name: doubao-seed-2.0-pro
+  #   display_name: Doubao-Seed-2.0-pro
+  #   use: deerflow.models.patched_deepseek:PatchedChatDeepSeek
+  #   model: doubao-seed-2-0-pro-260215
+  #   api_base: https://ark.cn-beijing.volces.com/api/v3
+  #   api_key: $VOLCENGINE_API_KEY
+  #   timeout: 600.0
+  #   max_retries: 2
+  #   supports_thinking: true
+  #   supports_vision: true
+  #   when_thinking_enabled:
+  #     extra_body:
+  #       thinking:
+  #         type: enabled
+
   # Example: OpenAI model
   # - name: gpt-4
   #   display_name: GPT-4

@@ -37,11 +37,13 @@ import { MarkdownContent } from "./markdown-content";
 export function MessageListItem({
   className,
   message,
+  threadId,
   isLoading,
   threadId,
 }: {
   className?: string;
   message: Message;
+  threadId: string;
   isLoading?: boolean;
   threadId: string;
 }) {
@@ -54,6 +56,7 @@ export function MessageListItem({
       <MessageContent
         className={isHuman ? "w-fit" : "w-full"}
         message={message}
+        threadId={threadId}
         isLoading={isLoading}
         threadId={threadId}
       />
@@ -112,11 +115,13 @@ function MessageImage({
 function MessageContent_({
   className,
   message,
+  threadId,
   isLoading = false,
   threadId,
 }: {
   className?: string;
   message: Message;
+  threadId: string;
   isLoading?: boolean;
   threadId: string;
 }) {
@@ -154,7 +159,7 @@ function MessageContent_({
   }, [rawContent, isHuman]);
 
   const filesList =
-    files && files.length > 0 ? (
+    files && files.length > 0 && threadId ? (
       <RichFilesList files={files} threadId={threadId} />
     ) : null;
 
